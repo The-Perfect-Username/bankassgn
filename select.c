@@ -1,28 +1,41 @@
 #include <stdio.h>
 #define EXIT_MENU 6
+#define NUMBER "28510631"
+#define NAME "Carl Gauss"
+
 void accountMenu();
 void accountInput(int input);
 void lineBreak();
 void divider();
 int validateInput(int input);
+void loggedIn(char* name, char* number);
+void savings(char* balance);
+void choice(int choice);
 
 int input_value;
 
 int main(int argc, char *argv[])
 {
-	
+	loggedIn(NAME, NUMBER);
+	int z = 0;
 	while(input_value != EXIT_MENU) {
 		lineBreak();
 		accountMenu();
 		lineBreak();
 		accountInput(input_value);
+		z++;
 	}
 	
     return 0;
 }
 
+void loggedIn(char* name, char* number) {
+	printf("You are currently logged in as %s \n", name);
+	printf("Client Number: %s \n", number);
+}
 
 void accountMenu() {
+	
 	printf("Please enter a selection \n");
 	printf("<1> Account Balance \n");
 	printf("<2> Withdrawal \n");
@@ -39,17 +52,23 @@ void accountInput(int input) {
 	scanf("%d", &input);
 	input_value = input;
 	
-	if (validateInput(input)) {
+	if (validateInput(input)) {	
 		if (input != EXIT_MENU) {
-			while (sub_input != 4) {
+			int a = 0;
+			while (a == 0 && sub_input != 4) {
 				lineBreak();
+		
 				printf("Please enter a selection \n");
 				printf("<1> Savings Account \n");
 				printf("<2> Loan Account \n");
 				printf("<3> Credit Card  \n");
+		
 				lineBreak();
+		
 				printf("Enter your selection (4 to exit) => ");
-				scanf("%d", &sub_input);
+				a = scanf("%d", &sub_input);
+				choice(sub_input);
+				
 			}
 		}
 
@@ -58,6 +77,23 @@ void accountInput(int input) {
 		printf("Invalid selection. Please choose an option from the menu.");
 		lineBreak();
 	}
+}
+
+void choice(int choice) {
+	if (choice == 1) {
+		savings("4123.54");
+	} else if (choice == 2) {
+	
+	} else if (choice == 3) {
+	
+	}
+}
+
+void savings(char* balance) {
+    divider();
+	printf("Account name - %s \n\n", NAME);
+	printf("Current balance for Account %s : $%s \n\n", NUMBER, balance);
+	divider();
 }
 
 // Checks to see if the input is between 1 and 6

@@ -12,7 +12,7 @@ int i = 0, j = 0;
 int main() {
 
 
-	fp = fopen("active/Accounts.txt", "r");
+	fp = fopen("active/Client_Details.txt", "r");
 
 	if (fp != NULL)
 	{
@@ -23,7 +23,7 @@ int main() {
 
 		while (fgets (line, sizeof line, fp) != NULL) /* read a line */
 		{
-			pch = strtok(line," ");
+			pch = strtok(line," \t");
 			while(pch != NULL)
 			{
 				
@@ -35,16 +35,18 @@ int main() {
 					// Decrememnt by 1 to overwrite element occupied by space character
 					j--;
 				}
-				pch = strtok(NULL," ");
+				pch = strtok(NULL," \t");
 				j++;
 			}
 			
 			array[i] = *inner;
 			
-			/*int c;
-			for (c = 0; c < 3; c++) {
-				printf("%s \n", inner[c]);
-			}*/
+			int c;
+			for (c = 0; c <= 3; c++) {
+				//if (strstr(inner[c], ",")) {
+					printf("%s \n", inner[c]);
+				//}
+			}
 			
 			j = 0;
 			i++;
@@ -53,7 +55,7 @@ int main() {
 	}
 	else
 	{
-		perror("Accounts.txt"); /* why didn't the file open? */
+		perror("Client_Details.txt"); /* why didn't the file open? */
 	}
 	
 	return 0;
