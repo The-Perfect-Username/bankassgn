@@ -3,18 +3,20 @@
 #include <string.h>
 
 #define SIZE 1024 /* read 1024 bytes at a time */
+
 int char_in_str(const char* str, const char* n);
-void readFile(char* file);
 
 char *inner[4];
 char buff[SIZE];
 FILE *fp;
 size_t nread;
 int i = 0, j = 0;
+void readFile(char* file);
 
 int main() {
+
+	readFile("active/Accounts.txt");
 	
-	readFile("active/Client_Details.txt");
 	
 	return 0;
 }
@@ -25,11 +27,10 @@ void readFile(char* file) {
 	if (fp != NULL)
 	{
 		char **array = malloc(2000 * sizeof(char*));
-		
-		char line[128]; 
+		char line[128]; /* or other suitable maximum line size */
 		char *token;
 
-		while (fgets (line, sizeof line, fp) != NULL) 
+		while (fgets (line, sizeof line, fp) != NULL) /* read a line */
 		{
 			token = strtok(line," \t");
 			while(token != NULL)
@@ -48,10 +49,10 @@ void readFile(char* file) {
 			}
 			
 			array[i] = *inner;
-			
-			j = 0;
 			i++;
+			
 		}
+		free(array);
 		fclose (fp);
 	}
 	else
@@ -70,6 +71,4 @@ int char_in_str(const char* str, const char* n) {
 	
 	return value;
 }
-
-
 

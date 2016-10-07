@@ -12,41 +12,66 @@
 
 	#define ARRAY_SIZE 30
 
+	#define RETURNED_ERROR -1
+void Receive_Array_Int_Data(int socket_identifier, int size);
+void Send_Array_Data(int socket_id, char *array);
+void header();
+void loginConsole(int socket);
 
-void Send_Array_Data(int socket_id, int *myArray) {
-	int i=0;
-	
-	uint16_t network_byte_order_short;  
-	
-	for (i = 0; i < ARRAY_SIZE; i++) {
-		
-		network_byte_order_short = htons(myArray[i]);
+void login(int sockfd) {
+	header();
+	loginConsole(sockfd);
 
-		send(socket_id, &network_byte_order_short, sizeof(uint16_t), 0);
-		
-		printf("Array[%d] = %d\n", i, network_byte_order_short);		
-	}
-	fflush(stdout);
+}
+
+void header() {
+	printf("\n\n===============================================================\n\n");
+	printf("Welcome to the online ATM System");
+	printf("\n\n===============================================================\n\n");
+}
+
+char* UserInput() {
+	char* input = malloc(sizeof(char)*20);
+	scanf("%s", input);
+	
+	size_t last = strlen(input) - 1;
+	if (input[last] == '\n') input[last] = '\0';
+	while (getchar() != '\n')
+		return input;
+}
+
+void loginConsole(int socket) {
+	char username;
+	int pin;
+	char* input;
+
+	printf("You are required to login with your registered Username and PIN\n\n");
+
+	printf("Please enter your username -->");	
+
+	input = UserInput();
+	
+	Send_Array_Data(socket, input);
+	//Receive_Array_Int_Data(socket, ARRAY_SIZE);
+	printf("Please enter your PIN -->");
+	
+	input = UserInput();
+	
+	Send_Array_Data(socket, input);
+	//Receive_Array_Int_Data(socket, ARRAY_SIZE);
 }
 
 
-
 int main(int argc, char *argv[]) {
-	int sockfd, numbytes, i=0, port_number;  
-	char buf[MAXDATASIZE], *port;
+	int sockfd, numbytes, i=0;  
+	char buf[MAXDATASIZE];
 	struct hostent *he;
 	struct sockaddr_in their_addr; /* connector's address information */
-	
+
 	if (argc != 3) {
 		fprintf(stderr,"usage: client_hostname port_number\n");
 		exit(1);
 	}
-
-	if (argc != 2 && argc != 3) {
-		fprintf(stderr,"usage: client_hostname\n");
-		exit(1);
-	}
-	
 
 	if ((he=gethostbyname(argv[1])) == NULL) {  /* get the host info */
 		herror("gethostbyname");
@@ -57,13 +82,10 @@ int main(int argc, char *argv[]) {
 		perror("socket");
 		exit(1);
 	}
-	
-	port = argv[2];
-	port_number = atoi(port);
 
 
 	their_addr.sin_family = AF_INET;      /* host byte order */
-	their_addr.sin_port = htons(port_number);    /* short, network byte order */
+	their_addr.sin_port = htons(atoi(argv[2]));    /* short, network byte order */
 	their_addr.sin_addr = *((struct in_addr *)he->h_addr);
 	bzero(&(their_addr.sin_zero), 8);     /* zero the rest of the struct */
 
@@ -72,16 +94,10 @@ int main(int argc, char *argv[]) {
 		perror("connect");
 		exit(1);
 	}
+	
+	login(sockfd);
 
-	/* Create an array of squares of first 30 whole numbers */
-	int simpleArray[ARRAY_SIZE] = {0};
-	for (i = 0; i < ARRAY_SIZE; i++) {
-		simpleArray[i] = i * i;
-	}
-
-	Send_Array_Data(sockfd, simpleArray);
-
-	/* Receive message back from server */
+		/* Receive message back from server */
 	if ((numbytes=recv(sockfd, buf, MAXDATASIZE, 0)) == -1) {
 		perror("recv");
 		exit(1);
@@ -94,4 +110,28 @@ int main(int argc, char *argv[]) {
 	close(sockfd);
 
 	return 0;
+}
+
+void Send_Array_Data(int socket_id, char *array) {
+
+	send(socket_id, array, sizeof(char*) * 50, 0);
+}
+
+void Receive_Array_Int_Data(int socket_identifier, int size) {
+    
+    int number_of_bytes, i;
+
+	
+	char *array = malloc(sizeof(char*) * 50);
+
+
+	if ((number_of_bytes=recv(socket_identifier, array, sizeof(char*) * 50, 0))
+	         == RETURNED_ERROR) {
+		perror("recv");
+		exit(EXIT_FAILURE);			
+	    
+	}
+
+	printf("Response from server: %s\n", array);
+
 }
