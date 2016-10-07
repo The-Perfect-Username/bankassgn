@@ -161,9 +161,12 @@ void Receive_Char_Data(int socket_identifier, int size) {
 		exit(EXIT_FAILURE);			
 	    
 	}
+	// Prevents any empty data sent from the client 
+	if ((int)strlen(array) > 0) {
+		printf("Sent: %s \n", array);
+		global = array;
+	}
 	
-	printf("Sent: %s \n", array);
-	global = array;
 
 }
 

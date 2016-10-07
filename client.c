@@ -31,9 +31,8 @@ void header() {
 }
 
 char* UserInput() {
-	char* input = malloc(sizeof(char)*20);
+	char *input = malloc(sizeof(char)*20);
 	scanf("%s", input);
-	
 	size_t last = strlen(input) - 1;
 	if (input[last] == '\n') input[last] = '\0';
 	while (getchar() != '\n')
@@ -50,15 +49,20 @@ void loginConsole(int socket) {
 	printf("Please enter your username -->");	
 
 	input = UserInput();
-	
+
 	Send_Array_Data(socket, input);
 	//Receive_Array_Int_Data(socket, ARRAY_SIZE);
 	printf("Please enter your PIN -->");
 	
 	input = UserInput();
-	
+
 	Send_Array_Data(socket, input);
+	
 	//Receive_Array_Int_Data(socket, ARRAY_SIZE);
+	
+	printf("Please enter whatever -->");
+	input = UserInput();
+	Send_Array_Data(socket, input);
 }
 
 
