@@ -30,13 +30,22 @@ struct thread_params {
 	char* param_two;
 };
 
+struct session {
+	char* username;
+	char* password;
+};
+
 //void Send_Array_Data(int socket_id);
 
 int char_in_str(const char* str, const char* n);
-void readFile(char* file);
+char** readFile(char* file);
+void Send_Array_Data(int socket_id, char* data);
+//void Send_Array_Data(void *args);
+char* Receive_Char_Data(int socket_identifier, int size);
 
-void Send_Array_Data(void *args);
-void Receive_Char_Data(int socket_identifier, int size);
+char* Receive_Login_Password(int socket_identifier, int size);
+char* Receive_Login_Username(int socket_identifier, int size);
+
 void Handle_Client(int);
 char *global;
 
@@ -45,7 +54,7 @@ char buff[SIZE];
 FILE *fp;
 size_t nread;
 int i = 0, j = 0;
-
+struct session *user;
 int main(int argc, char *argv[]) {
 
 	/* Thread and thread attributes */
@@ -129,31 +138,65 @@ int main(int argc, char *argv[]) {
 }
 
 void Handle_Client(int client_fd) {
+	char* c;
 	while (1) {
-		Receive_Char_Data(client_fd, 1024);
-		Receive_Char_Data(client_fd, 1024);
+		char* username = Receive_Login_Username(client_fd, 1024);
+		Send_Array_Data(client_fd, username);
+		char* pin = Receive_Login_Password(client_fd, 1024);
+		Send_Array_Data(client_fd, pin);
+		
+		char** rf = readFile("active/Authentication.txt");
+		int it = 0, ib = 0;
+		while (it < 5) {
+			char* red = rf[it];
+			while (ib < 3) {
+				printf("%s \n", rf);
+				ib++;
+			}
+			ib = 0;
+			it++;
+		}
+		
+		exit(1);
 	}
 
-
 }
 
 
-void Send_Array_Data(void *args) {
+void Send_Array_Data(int socket_id, char* data) {
+	//void *args
+	//struct thread_params *params = args;
 	
-	struct thread_params *params = args;
+	//int socket_id = params->param_one;
+	//char* array = global; //params->param_two;
 	
-	int socket_id = params->param_one;
-	char* array = params->param_two;
-	
-	free(params);
+	//free(params);
 
-	send(socket_id, array, sizeof(char*) * 50, 0);
+	send(socket_id, data, sizeof(char*) * 50, 0);
 }
 
-void Receive_Char_Data(int socket_identifier, int size) {
+char* Receive_Char_Data(int socket_identifier, int size) {
     
     int number_of_bytes, i=0;
-	char *array = malloc(sizeof(char*)*50);
+	char *array = malloc(sizeof(char*)*size);
+
+	if ((number_of_bytes=recv(socket_identifier, array, sizeof(char*) * size, 0))
+	         == RETURNED_ERROR) {
+		perror("recv");
+		exit(EXIT_FAILURE);			
+	    
+	}
+	// Prevents any empty data sent from the client 
+	printf("Sent: %s \n", array);
+	return array;
+	
+}
+
+char* Receive_Login_Username(int socket_identifier, int size) {
+    
+    int number_of_bytes;
+	char *array = malloc(sizeof(char*)*size);
+	char *value = malloc(sizeof(char*)*size);
 
 	if ((number_of_bytes=recv(socket_identifier, array, sizeof(char*) * size, 0))
 	         == RETURNED_ERROR) {
@@ -163,19 +206,38 @@ void Receive_Char_Data(int socket_identifier, int size) {
 	}
 	// Prevents any empty data sent from the client 
 	if ((int)strlen(array) > 0) {
-		printf("Sent: %s \n", array);
-		global = array;
-	}
+		value = array; 
+		printf("Sent: %s \n", value);
 	
-
+	}
+	return value;
 }
 
-void readFile(char* file) {
-	fp = fopen(file, "r");
+char* Receive_Login_Password(int socket_identifier, int size) {
+    
+    int number_of_bytes;
+	char *array = malloc(sizeof(char*)*size);
+	char *value = malloc(sizeof(char*)*size);
+	if ((number_of_bytes=recv(socket_identifier, array, sizeof(char*) * size, 0))
+	         == RETURNED_ERROR) {
+		perror("recv");
+		exit(EXIT_FAILURE);			
+	    
+	}
+	// Prevents any empty data sent from the client 
+	if ((int)strlen(array) > 0) {
+		value = array;
+		printf("Sent: %s \n", value);
+	}
+	return value;
+}
 
+char** readFile(char* file) {
+	fp = fopen(file, "r");
+	char **array = malloc(2000 * sizeof(char*));
 	if (fp != NULL)
 	{
-		char **array = malloc(2000 * sizeof(char*));
+		
 		
 		char line[128]; 
 		char *token;
@@ -187,11 +249,11 @@ void readFile(char* file) {
 			{
 				
 				// Checks to see if the current element is a space character
-				if (strlen(token) > 1) {
+				if ((int)strlen(token) > 1) {
 					inner[j] = token;
-					printf("inner[%d] = %s \n", j, inner[j]);					
+					//printf("inner[%d] = %s \n", j, inner[j]);					
 				} else {
-					// Decrememnt by 1 to overwrite element occupied by space character
+					// Decrement by 1 to overwrite element occupied by space character
 					j--;
 				}
 				token = strtok(NULL," \t");
@@ -209,6 +271,8 @@ void readFile(char* file) {
 	{
 		perror(file); /* why didn't the file open? */
 	}
+	
+	return array;
 }
 
 int char_in_str(const char* str, const char* n) {

@@ -13,7 +13,7 @@
 	#define ARRAY_SIZE 30
 
 	#define RETURNED_ERROR -1
-void Receive_Array_Int_Data(int socket_identifier, int size);
+void Receive_Data(int socket_identifier, int size);
 void Send_Array_Data(int socket_id, char *array);
 void header();
 void loginConsole(int socket);
@@ -35,8 +35,8 @@ char* UserInput() {
 	scanf("%s", input);
 	size_t last = strlen(input) - 1;
 	if (input[last] == '\n') input[last] = '\0';
-	while (getchar() != '\n')
-		return input;
+	//while (getchar() != '\n')
+	return input;
 }
 
 void loginConsole(int socket) {
@@ -51,18 +51,15 @@ void loginConsole(int socket) {
 	input = UserInput();
 
 	Send_Array_Data(socket, input);
-	//Receive_Array_Int_Data(socket, ARRAY_SIZE);
+	Receive_Data(socket, ARRAY_SIZE);
 	printf("Please enter your PIN -->");
 	
 	input = UserInput();
 
 	Send_Array_Data(socket, input);
 	
-	//Receive_Array_Int_Data(socket, ARRAY_SIZE);
+	Receive_Data(socket, ARRAY_SIZE);
 	
-	printf("Please enter whatever -->");
-	input = UserInput();
-	Send_Array_Data(socket, input);
 }
 
 
@@ -117,25 +114,25 @@ int main(int argc, char *argv[]) {
 }
 
 void Send_Array_Data(int socket_id, char *array) {
-
+	printf("Size of char: %d \n", (int)strlen(array));
 	send(socket_id, array, sizeof(char*) * 50, 0);
 }
 
-void Receive_Array_Int_Data(int socket_identifier, int size) {
+void Receive_Data(int socket_identifier, int size) {
     
     int number_of_bytes, i;
 
 	
-	char *array = malloc(sizeof(char*) * 50);
+	char *data = malloc(sizeof(char*) * 50);
 
 
-	if ((number_of_bytes=recv(socket_identifier, array, sizeof(char*) * 50, 0))
+	if ((number_of_bytes=recv(socket_identifier, data, sizeof(char*) * 50, 0))
 	         == RETURNED_ERROR) {
 		perror("recv");
 		exit(EXIT_FAILURE);			
 	    
 	}
 
-	printf("Response from server: %s\n", array);
+	printf("Response from server: %s\n", data);
 
 }
