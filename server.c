@@ -32,7 +32,7 @@ struct thread_params {
 
 struct Sessions {
 	char username[20];
-	int pin;
+	long long pin;
 };
 
 struct FileInfo {
@@ -47,19 +47,18 @@ authentication_data *auth[10];
 typedef struct Sessions login_details;
 login_details *session[10];
 
-//void Send_Array_Data(int socket_id);
-
 int char_in_str(const char* str, const char* n);
 void readFile(char* file);
-void Send_Array_Data(int socket_id, char* data);
-//void Send_Array_Data(void *args);
+
 char* Receive_Char_Data(int socket_identifier, int size);
 
 void Receive_Login_Username(int socket_identifier, int size);
 void Receive_Login_PIN(int socket_identifier, int size);
 
+void Send_Char_Data(int socket_id, char *data);
+void Send_Int_Data(int socket_id, int data);
+
 void Handle_Client(int);
-char *global;
 
 char buff[SIZE];
 FILE *fp;
@@ -155,9 +154,12 @@ void Handle_Client(int client_fd) {
 	while (1) {
 		session[sitr] = malloc(sizeof(login_details));
 		Receive_Login_Username(client_fd, 1024);
-		Send_Array_Data(client_fd, "a");
+		Send_Char_Data(client_fd, "a");
+		printf("3\n");
 		Receive_Login_PIN(client_fd, 1024);
-		Send_Array_Data(client_fd, "a");
+		printf("3\n");
+		Send_Int_Data(client_fd, 1);
+		printf("3\n");
 		readFile("active/Authentication.txt");
 		
 		for (i = 0; i < 10; i++) {
@@ -174,26 +176,18 @@ void Handle_Client(int client_fd) {
 
 }
 
-
-void Send_Array_Data(int socket_id, char* data) {
-	send(socket_id, data, sizeof(char*) * 50, 0);
+void Send_Char_Data(int socket_id, char *data) {
+	char buff[1024];
+	strcpy(buff, data);
+	printf("2\n");
+	send(socket_id, buff, sizeof(char) * 1024, 0);
+	printf("2\n");
 }
 
-char* Receive_Char_Data(int socket_identifier, int size) {
-    
-    int number_of_bytes, i=0;
-	char *array = malloc(sizeof(char*)*size);
-
-	if ((number_of_bytes=recv(socket_identifier, array, sizeof(char*) * size, 0))
-	         == RETURNED_ERROR) {
-		perror("recv");
-		exit(EXIT_FAILURE);			
-	    
-	}
-	// Prevents any empty data sent from the client 
-	printf("Sent: %s \n", array);
-	return array;
-	
+void Send_Int_Data(int socket_id, int data) {
+	long long converted_number = htonl(data);
+	printf("1\n");
+	send(socket_id, &converted_number, sizeof(long long), 0);
 }
 
 void Receive_Login_Username(int socket_identifier, int size) {
@@ -215,19 +209,22 @@ void Receive_Login_Username(int socket_identifier, int size) {
 
 void Receive_Login_PIN(int socket_identifier, int size) {
 	int number_of_bytes;
-	char *value = malloc(sizeof(char*)*size);
-	if ((number_of_bytes=recv(socket_identifier, value, sizeof(char*) * size, 0))
+	long long received_int = 0;
+	printf("5\n");
+	if ((number_of_bytes=recv(socket_identifier, &received_int, sizeof(long long), 0))
 	         == RETURNED_ERROR) {
 		perror("recv");
 		exit(EXIT_FAILURE);			
 	    
 	}
+	printf("5\n");
+	long long result = ntohl(received_int);
+	printf("5\n");
 	// Prevents any empty data sent from the client 
-	if ((int)strlen(value) > 0) {
-		session[0]->pin = atoi(value);
-		printf("Sent by: %d\n", session[0]->pin);
-		printf("Sent: %s \n", value);
-	}
+	session[0]->pin = result;
+	printf("5\n");
+	printf("Sent by: %lli\n", session[0]->pin);
+	printf("Sent: %lli \n", result);
 }
 
 void readFile(char* file) {

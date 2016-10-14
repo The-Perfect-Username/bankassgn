@@ -13,8 +13,10 @@
 	#define ARRAY_SIZE 30
 
 	#define RETURNED_ERROR -1
-void Receive_Data(int socket_identifier, int size);
-void Send_Array_Data(int socket_id, char *array);
+void Receive_Char_Data(int socket_identifier, int size);
+void Receive_Int_Data(int socket_identifier, int size);
+void Send_Char_Data(int socket_id, char *data);
+void Send_Int_Data(int socket_id, int data);
 void header();
 void loginConsole(int socket);
 
@@ -50,15 +52,15 @@ void loginConsole(int socket) {
 
 	input = UserInput();
 
-	Send_Array_Data(socket, input);
-	Receive_Data(socket, ARRAY_SIZE);
+	Send_Char_Data(socket, input);
+	Receive_Char_Data(socket, ARRAY_SIZE);
 	printf("Please enter your PIN -->");
 	
 	input = UserInput();
 
-	Send_Array_Data(socket, input);
+	Send_Int_Data(socket, atoi(input));
 	
-	Receive_Data(socket, ARRAY_SIZE);
+	Receive_Int_Data(socket, ARRAY_SIZE);
 	
 }
 
@@ -113,20 +115,26 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
-void Send_Array_Data(int socket_id, char *array) {
-	printf("Size of char: %d \n", (int)strlen(array));
-	send(socket_id, array, sizeof(char*) * 50, 0);
+void Send_Char_Data(int socket_id, char *data) {
+	char buff[1024];
+	strcpy(buff, data);
+	send(socket_id, buff, sizeof(char*) * 1024, 0);
 }
 
-void Receive_Data(int socket_identifier, int size) {
+void Send_Int_Data(int socket_id, int data) {
+	long long converted_number = htonl(data);
+	send(socket_id, &converted_number, sizeof(long long) * 1024, 0);
+}
+
+void Receive_Char_Data(int socket_identifier, int size) {
     
     int number_of_bytes, i;
 
 	
-	char *data = malloc(sizeof(char*) * 50);
+	char *data = malloc(sizeof(char*) * 1024);
 
 
-	if ((number_of_bytes=recv(socket_identifier, data, sizeof(char*) * 50, 0))
+	if ((number_of_bytes=recv(socket_identifier, data, sizeof(char*) * 1024, 0))
 	         == RETURNED_ERROR) {
 		perror("recv");
 		exit(EXIT_FAILURE);			
@@ -134,5 +142,20 @@ void Receive_Data(int socket_identifier, int size) {
 	}
 
 	printf("Response from server: %s\n", data);
+
+}
+
+void Receive_Int_Data(int socket_identifier, int size) {
+    
+    int number_of_bytes, i;
+
+	long long received_int = 0;
+	if ((number_of_bytes=recv(socket_identifier, &received_int, sizeof(long long) * 1024, 0))
+         == RETURNED_ERROR) {
+		perror("recv");
+		exit(EXIT_FAILURE);	
+	}
+	long long result = ntohl(received_int);
+	printf("Response from server: %lli\n", result);
 
 }
