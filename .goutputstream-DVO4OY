@@ -30,22 +30,10 @@ struct thread_params {
 	char* param_two;
 };
 
-struct Sessions {
-	char username[20];
-	int pin;
+struct session {
+	char* username;
+	char* pin;
 };
-
-struct FileInfo {
-	char username[20];
-	int pin;
-	int clientno;
-};
-
-typedef struct FileInfo authentication_data;
-authentication_data *auth[10];
-
-typedef struct Sessions login_details;
-login_details *session[10];
 
 //void Send_Array_Data(int socket_id);
 
@@ -54,18 +42,14 @@ void readFile(char* file);
 void Send_Array_Data(int socket_id, char* data);
 //void Send_Array_Data(void *args);
 char* Receive_Char_Data(int socket_identifier, int size);
-
-void Receive_Login_Username(int socket_identifier, int size);
-void Receive_Login_PIN(int socket_identifier, int size);
-
 void Handle_Client(int);
 char *global;
 
+char *inner[4];
 char buff[SIZE];
 FILE *fp;
 size_t nread;
 int i = 0, j = 0;
-
 
 int main(int argc, char *argv[]) {
 
@@ -127,12 +111,12 @@ int main(int argc, char *argv[]) {
 
 
 		//Create a thread to accept client
-		//Receive_Char_Data(new_fd, ARRAY_SIZE);
+		Receive_Char_Data(new_fd, ARRAY_SIZE);
 
-		//struct thread_params *params = malloc(sizeof *params);
+		struct thread_params *params = malloc(sizeof *params);
 		
-		//params->param_one = new_fd;
-    	//params->param_two = global;
+		params->param_one = new_fd;
+    	params->param_two = global;
     	
 		pthread_attr_t attr;
 		pthread_attr_init(&attr);
@@ -150,39 +134,34 @@ int main(int argc, char *argv[]) {
 }
 
 void Handle_Client(int client_fd) {
-	int sitr = 0;
-	int ok = 0;
 	while (1) {
-		session[sitr] = malloc(sizeof(login_details));
-		Receive_Login_Username(client_fd, 1024);
-		Send_Array_Data(client_fd, "a");
-		Receive_Login_PIN(client_fd, 1024);
-		Send_Array_Data(client_fd, "a");
-		readFile("active/Authentication.txt");
-		
-		for (i = 0; i < 10; i++) {
-			if (strcmp(auth[i]->username, session[sitr]->username) != 0) {
-				if (auth[i]->pin, session[sitr]->pin) {
-					ok = 1;
-				}
-			}
-		}
-		printf("Client found? %d \n", ok); 
-		sitr++;
-		exit(1);
+		char* a = Receive_Char_Data(client_fd, 1024);
+		char* b = Receive_Char_Data(client_fd, 1024);
+		printf("%s\n", a)
+		Send_Array_Data(client_fd, a);
+		Send_Array_Data(client_fd, b);
 	}
+
 
 }
 
 
 void Send_Array_Data(int socket_id, char* data) {
+	//void *args
+	//struct thread_params *params = args;
+	
+	//int socket_id = params->param_one;
+	//char* array = global; //params->param_two;
+	
+	//free(params);
+
 	send(socket_id, data, sizeof(char*) * 50, 0);
 }
 
 char* Receive_Char_Data(int socket_identifier, int size) {
     
     int number_of_bytes, i=0;
-	char *array = malloc(sizeof(char*)*size);
+	char *array = malloc(sizeof(char*)*50);
 
 	if ((number_of_bytes=recv(socket_identifier, array, sizeof(char*) * size, 0))
 	         == RETURNED_ERROR) {
@@ -191,86 +170,46 @@ char* Receive_Char_Data(int socket_identifier, int size) {
 	    
 	}
 	// Prevents any empty data sent from the client 
-	printf("Sent: %s \n", array);
-	return array;
+	if ((int)strlen(array) > 0) {
+		printf("Sent: %s \n", array);
+		return array;
+	} else {
+		return 0;	
+	}
 	
-}
 
-void Receive_Login_Username(int socket_identifier, int size) {
-	int number_of_bytes;
-	char *value = malloc(sizeof(char*)*size);
-	if ((number_of_bytes=recv(socket_identifier, value, sizeof(char*) * size, 0))
-	         == RETURNED_ERROR) {
-		perror("recv");
-		exit(EXIT_FAILURE);			
-	    
-	}
-	// Prevents any empty data sent from the client 
-	if ((int)strlen(value) > 0) {
-		strcpy(session[0]->username, value);
-		printf("Sent by: %s\n", session[0]->username);
-		printf("Sent: %s \n", value);
-	}
-}
-
-void Receive_Login_PIN(int socket_identifier, int size) {
-	int number_of_bytes;
-	char *value = malloc(sizeof(char*)*size);
-	if ((number_of_bytes=recv(socket_identifier, value, sizeof(char*) * size, 0))
-	         == RETURNED_ERROR) {
-		perror("recv");
-		exit(EXIT_FAILURE);			
-	    
-	}
-	// Prevents any empty data sent from the client 
-	if ((int)strlen(value) > 0) {
-		session[0]->pin = atoi(value);
-		printf("Sent by: %d\n", session[0]->pin);
-		printf("Sent: %s \n", value);
-	}
 }
 
 void readFile(char* file) {
-	
 	fp = fopen(file, "r");
 
-	char* array = malloc(2000 * sizeof(char*));	
 	if (fp != NULL)
 	{
+		char **array = malloc(2000 * sizeof(char*));
+		
 		char line[128]; 
 		char *token;
 
 		while (fgets (line, sizeof line, fp) != NULL) 
 		{
-			auth[i] = malloc(sizeof(authentication_data));
 			token = strtok(line," \t");
 			while(token != NULL)
 			{
 				
 				// Checks to see if the current element is a space character
-				if ((int)strlen(token) > 1 &&  i > 0) {
-					if (j == 0)
-					{
-						strcpy(auth[i-1]->username, token);
-						printf("Username is %s \n", auth[i-1]->username);
-					}
-					else if (j == 1)
-					{
-						auth[i-1]->pin = atoi(token);
-						printf("PIN is %d \n", auth[i-1]->pin);
-					}
-					else if (j == 2) 
-					{	
-						auth[i-1]->clientno = atoi(token);
-						printf("Client No. is %d \n", auth[i-1]->clientno);	
-					}				
+				if (strlen(token) > 1) {
+					inner[j] = token;
+					printf("inner[%d] = %s \n", j, inner[j]);					
 				} else {
-					// Decrement by 1 to overwrite element occupied by space character
+					// Decrememnt by 1 to overwrite element occupied by space character
 					j--;
 				}
 				token = strtok(NULL," \t");
 				j++;
 			}
+			
+			array[i] = *inner;
+			
 			j = 0;
 			i++;
 		}
@@ -280,7 +219,6 @@ void readFile(char* file) {
 	{
 		perror(file); /* why didn't the file open? */
 	}
-	
 }
 
 int char_in_str(const char* str, const char* n) {
